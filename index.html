@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GI Disease Calculators</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --surface2: #f8fafc;
+    --border: #e2e8f0;
+    --accent: #2563eb;
+    --text: #1e293b;
+    --muted: #64748b;
+    --green: #16a34a;
+    --yellow: #b45309;
+    --orange: #c2410c;
+    --red: #dc2626;
+    --radius: 12px;
+    --header-h: 56px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR (desktop only) ─────────────────────── */
+  nav {
+    width: 228px;
+    min-width: 228px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 24px;
+  }
+  .nav-header {
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-header h1 { font-size: 15px; font-weight: 700; color: var(--text); }
+  .nav-header p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .nav-group { margin-top: 8px; }
+  .nav-group-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 16px 3px;
+  }
+  nav a {
+    display: block;
+    padding: 8px 16px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    border-left: 3px solid transparent;
+    transition: all 0.13s;
+    cursor: pointer;
+    line-height: 1.3;
+  }
+  nav a:hover { color: var(--text); background: #f1f5f9; }
+  nav a.active { color: var(--accent); background: #eff6ff; border-left-color: var(--accent); font-weight: 600; }
+
+  /* ── MOBILE HEADER ──────────────────────────────── */
+  .mobile-header {
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    height: var(--header-h);
+    align-items: center;
+    padding: 0 16px;
+    gap: 10px;
+  }
+  .mobile-header h1 { font-size: 15px; font-weight: 700; flex: 1; }
+  .mobile-back {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 0;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .mobile-back svg { width: 18px; height: 18px; }
+
+  /* ── MAIN ───────────────────────────────────────── */
+  main {
+    flex: 1;
+    padding: 28px 32px;
+    max-width: 820px;
+    min-width: 0;
+  }
+  .page-title { font-size: 22px; font-weight: 800; margin-bottom: 3px; }
+  .page-subtitle { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+
+  /* ── FILTER PILLS ───────────────────────────────── */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .filter-pill {
+    padding: 6px 14px;
+    border-radius: 99px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.13s;
+    user-select: none;
+  }
+  .filter-pill:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ── HOME GRID ──────────────────────────────────── */
+  .home-screen { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .home-tile {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.13s, box-shadow 0.13s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .home-tile:hover { border-color: var(--accent); box-shadow: 0 2px 12px rgba(37,99,235,0.1); }
+  .home-tile:active { background: #eff6ff; }
+  .home-tile.hidden { display: none; }
+  .tile-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .tile-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .tile-desc { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
+  /* ── CALC CARD ──────────────────────────────────── */
+  .calc-card { display: none; }
+  .calc-card.active { display: block; }
+  .calc-card-inner {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .calc-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .calc-tag {
+    background: #eff6ff;
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 99px;
+    white-space: nowrap;
+    margin-top: 3px;
+    border: 1px solid #bfdbfe;
+  }
+  .calc-title { font-size: 16px; font-weight: 700; }
+  .calc-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .calc-body { padding: 0; display: flex; }
+  .calc-left { flex: 1; min-width: 0; padding: 20px; }
+  .calc-right {
+    width: 300px;
+    flex-shrink: 0;
+    padding: 20px;
+    background: var(--surface2);
+    border-left: 1px solid var(--border);
+    border-radius: 0 0 var(--radius) 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .calc-right-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .calc-right .result-box {
+    flex: 1;
+    margin-top: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+  }
+  .calc-right .result-box.show { display: flex; flex-direction: column; }
+  .calc-empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--muted);
+    gap: 8px;
+    padding: 20px 0;
+  }
+  .calc-empty-state svg { opacity: 0.25; }
+  .calc-empty-state p { font-size: 13px; }
+
+  /* ── SCORE REFERENCE ────────────────────────────── */
+  .score-ref { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .score-ref-title {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+  }
+  .score-ref-row {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 5px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px;
+  }
+  .score-ref-row:last-of-type { border-bottom: none; }
+  .score-ref-range { font-weight: 700; white-space: nowrap; min-width: 52px; }
+  .score-ref-label { color: var(--muted); line-height: 1.4; }
+  .score-ref-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 3px;
+  }
+  .dot-green  { background: var(--green); }
+  .dot-yellow { background: var(--yellow); }
+  .dot-orange { background: var(--orange); }
+  .dot-red    { background: var(--red); }
+  .dot-blue   { background: var(--accent); }
+  .score-ref-notes { margin-top: 10px; }
+  .score-ref-note {
+    font-size: 11px; color: var(--muted); line-height: 1.5;
+    padding: 3px 0; border-bottom: 1px dashed #e2e8f0;
+  }
+  .score-ref-note:last-child { border-bottom: none; }
+  .score-ref-note strong { color: var(--text); }
+
+  /* ── BACK BUTTON (desktop, inside card) ─────────── */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 16px;
+    transition: color 0.13s;
+  }
+  .back-btn:hover { color: var(--accent); }
+
+  /* ── FORM ───────────────────────────────────────── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+  .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.cols-1 { grid-template-columns: 1fr; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .field input, .field select {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 12px;
+    font-size: 15px;
+    transition: border-color 0.13s;
+    outline: none;
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 44px;
+  }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 34px;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); background: #fff; }
+  .field .hint { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+  /* ── SECTION LABEL ──────────────────────────────── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 18px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid #bfdbfe;
+  }
+
+  /* ── CHECKBOXES ─────────────────────────────────── */
+  .check-group { display: flex; flex-direction: column; gap: 2px; }
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 8px;
+    transition: background 0.1s;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .check-item:hover { background: #f1f5f9; }
+  .check-item input[type=checkbox] {
+    width: 18px; height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* ── BUTTONS ────────────────────────────────────── */
+  .btn-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  button.calc-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 24px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.13s;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button.calc-btn:hover { background: #1d4ed8; }
+  button.calc-btn:active { background: #1e40af; }
+  button.reset-btn {
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.13s;
+    min-height: 44px;
+  }
+  button.reset-btn:hover { color: var(--text); border-color: #94a3b8; }
+
+  /* ── RESULT ─────────────────────────────────────── */
+  .result-box {
+    display: none;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-top: 4px;
+  }
+  .result-box.show { display: block; }
+  .result-score { font-size: 34px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+  .result-label { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--text); }
+  .result-details { font-size: 13px; color: var(--muted); line-height: 1.65; }
+  .result-details strong { color: var(--text); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 4px;
+  }
+  .badge-green  { background: #dcfce7; color: #15803d; }
+  .badge-yellow { background: #fef3c7; color: #b45309; }
+  .badge-orange { background: #ffedd5; color: #c2410c; }
+  .badge-red    { background: #fee2e2; color: #dc2626; }
+  .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+
+  .result-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .result-stat {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    min-width: 90px;
+  }
+  .result-stat .stat-val { font-size: 18px; font-weight: 800; }
+  .result-stat .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .color-green  { color: var(--green); }
+  .color-yellow { color: var(--yellow); }
+  .color-orange { color: var(--orange); }
+  .color-red    { color: var(--red); }
+
+  /* ── SEPARATOR ──────────────────────────────────── */
+  hr.sep { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* ══════════════════════════════════════════════════
+     MOBILE  (≤ 768px)
+  ══════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    body { display: block; }
+    nav { display: none; }
+    .mobile-header { display: flex; }
+    main { padding: 16px; max-width: 100%; }
+    .page-title { font-size: 18px; }
+    .page-subtitle { font-size: 12px; margin-bottom: 14px; }
+    .home-screen { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .form-grid,
+    .form-grid.cols-3 { grid-template-columns: 1fr; gap: 12px; }
+    .calc-body { flex-direction: column; }
+    .calc-left { padding: 16px; }
+    .calc-right {
+      width: 100%;
+      border-left: none;
+      border-top: 1px solid var(--border);
+      border-radius: 0 0 var(--radius) var(--radius);
+      padding: 16px;
+    }
+    .calc-right .result-box { padding: 0; }
+    .calc-header { padding: 12px 16px; }
+    .calc-title { font-size: 15px; }
+    .back-btn { display: none !important; }
+    .mobile-back { display: inline-flex; }
+    .result-row { gap: 8px; }
+    .result-stat { min-width: 80px; padding: 8px 12px; }
+    .result-stat .stat-val { font-size: 16px; }
+    .check-group[style*="grid"] { display: flex !important; flex-direction: column !important; }
+    .btn-row { gap: 8px; }
+    button.calc-btn { flex: 1; }
+    .calc-empty-state { padding: 12px 0; }
+  }
+
+  @media (min-width: 769px) {
+    .mobile-header { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+
+<!-- ── MOBILE STICKY HEADER ─────────────────────────── -->
+<div class="mobile-header" id="mobile-header">
+  <button class="mobile-back" id="mobile-back" onclick="showHome()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+    Back
+  </button>
+  <h1 id="mobile-title">GI Calculators</h1>
+</div>
+
+<main>
+  <!-- ── HOME VIEW ──────────────────────────────────── -->
+  <div id="home-view">
+    <div class="page-title">GI Calculators</div>
+    <div class="page-subtitle">Evidence-based scoring tools — tap a calculator to begin</div>
+
+    <div class="filter-bar" id="filter-bar">
+      <div class="filter-pill active" data-filter="all" onclick="setFilter('all')">All</div>
+      <div class="filter-pill" data-filter="liver" onclick="setFilter('liver')">Liver</div>
+      <div class="filter-pill" data-filter="bleed" onclick="setFilter('bleed')">GI Bleeding</div>
+      <div class="filter-pill" data-filter="ibd" onclick="setFilter('ibd')">IBD</div>
+      <div class="filter-pill" data-filter="motility" onclick="setFilter('motility')">Motility</div>
+      <div class="filter-pill" data-filter="pancreas" onclick="setFilter('pancreas')">Pancreas</div>
+    </div>
+
+    <div class="home-screen">
+      <div class="home-tile" data-cat="liver" onclick="showCalc('meld30')"><div class="tile-tag">Liver</div><div class="tile-name">MELD 3.0</div><div class="tile-desc">End-stage liver disease — 2022 update with sex, Na &amp; albumin</div></div>
+      <div class="home-tile" data-cat="liver" onclick="showCalc('childpugh')"><div class="tile-tag">Liver</div><div class="tile-name">Child-Pugh</div><div class="tile-desc">Class A/B/C with survival &amp; perioperative mortality</div></div>
+      <div class="home-tile" data-cat="liver" onclick="showCalc('fib4')"><div class="tile-tag">Liver</div><div class="tile-name">FIB-4 Index</div><div class="tile-desc">Non-invasive fibrosis staging — low / indeterminate / high</div></div>
+      <div class="home-tile" data-cat="liver" onclick="showCalc('mdf')"><div class="tile-tag">Liver</div><div class="tile-name">Maddrey DF</div><div class="tile-desc">Alcoholic hepatitis severity — steroid threshold ≥32</div></div>
+      <div class="home-tile" data-cat="liver" onclick="showCalc('lille')"><div class="tile-tag">Liver</div><div class="tile-name">Lille Model</div><div class="tile-desc">Day-7 steroid response — 6-month survival prediction</div></div>
+      <div class="home-tile" data-cat="liver" onclick="showCalc('mayopsc')"><div class="tile-tag">Liver</div><div class="tile-name">Mayo PSC</div><div class="tile-desc">PSC transplant-free survival at 1, 2, and 5 years</div></div>
+      <div class="home-tile" data-cat="bleed" onclick="showCalc('glasgow')"><div class="tile-tag">GI Bleeding</div><div class="tile-name">Glasgow-Blatchford</div><div class="tile-desc">Upper GI bleed — 23-point scale, intervention risk</div></div>
+      <div class="home-tile" data-cat="bleed" onclick="showCalc('oakland')"><div class="tile-tag">GI Bleeding</div><div class="tile-name">Oakland Score</div><div class="tile-desc">Lower GI bleed — discharge thresholds ≤8 and ≤10</div></div>
+      <div class="home-tile" data-cat="bleed" onclick="showCalc('rockall')"><div class="tile-tag">GI Bleeding</div><div class="tile-name">Rockall Score</div><div class="tile-desc">Post-endoscopy rebleed &amp; mortality risk</div></div>
+      <div class="home-tile" data-cat="motility" onclick="showCalc('eckardt')"><div class="tile-tag">Motility</div><div class="tile-name">Eckardt Score</div><div class="tile-desc">Achalasia severity — Grade 0–III, remission ≤3</div></div>
+      <div class="home-tile" data-cat="ibd" onclick="showCalc('hbi')"><div class="tile-tag">IBD</div><div class="tile-name">Harvey-Bradshaw (CD)</div><div class="tile-desc">Crohn's disease activity — remission through severe</div></div>
+      <div class="home-tile" data-cat="ibd" onclick="showCalc('mayo')"><div class="tile-tag">IBD</div><div class="tile-name">Mayo Score (UC)</div><div class="tile-desc">Full 12-point with all four subscores</div></div>
+      <div class="home-tile" data-cat="pancreas" onclick="showCalc('bisap')"><div class="tile-tag">Pancreas</div><div class="tile-name">BISAP</div><div class="tile-desc">Acute pancreatitis severity — 5-point with mortality</div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ MELD 3.0 ═════════════════════ -->
+  <div class="calc-card" id="meld30">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">LIVER</div>
+      <div><div class="calc-title">MELD 3.0</div><div class="calc-subtitle">Model for End-Stage Liver Disease — 2022 update with sex, sodium &amp; albumin</div></div>
+    </div>
+    <div class="calc-body">
+      <div class="form-grid">
+        <div class="field"><label>Sex at Birth</label><select id="m3-sex"><option value="0">Male</option><option value="1">Female</option></select></div>
+        <div class="field"><label>Creatinine (mg/dL)</label><input type="number" id="m3-cr" inputmode="decimal" step="0.01" placeholder="e.g. 1.2"><span class="hint">Capped 1.0–3.0; use 3.0 if on dialysis</span></div>
+        <div class="field"><label>Bilirubin (mg/dL)</label><input type="number" id="m3-bili" inputmode="decimal" step="0.01" placeholder="e.g. 2.0"><span class="hint">Min 1.0 used in formula</span></div>
+        <div class="field"><label>INR</label><input type="number" id="m3-inr" inputmode="decimal" step="0.01" placeholder="e.g. 1.5"><span class="hint">Min 1.0 used in formula</span></div>
+        <div class="field"><label>Sodium (mEq/L)</label><input type="number" id="m3-na" inputmode="numeric" placeholder="e.g. 136"><span class="hint">Capped 125–137 mEq/L</span></div>
+        <div class="field"><label>Albumin (g/dL)</label><input type="number" id="m3-alb" inputmode="decimal" step="0.1" placeholder="e.g. 3.5"></div>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcMELD30()">Calculate</button>
+        <button class="reset-btn" onclick="resetCalc('meld30-result',['m3-sex','m3-cr','m3-bili','m3-inr','m3-na','m3-alb'])">Reset</button>
+      </div>
+      <div class="result-box" id="meld30-result"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ═══════════════════ CHILD-PUGH ═══════════════════ -->
+  <div class="calc-card" id="childpugh">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">LIVER</div>
+      <div><div class="calc-title">Child-Pugh Score</div><div class="calc-subtitle">Cirrhosis severity — Class A/B/C with survival &amp; perioperative mortality</div></div>
+    </div>
+    <div class="calc-body">
+      <div class="form-grid">
+        <div class="field"><label>Bilirubin (mg/dL)</label><select id="cp-bili"><option value="1">&lt;2 mg/dL</option><option value="2">2–3 mg/dL</option><option value="3">&gt;3 mg/dL</option></select></div>
+        <div class="field"><label>Albumin (g/dL)</label><select id="cp-alb"><option value="1">&gt;3.5 g/dL</option><option value="2">2.8–3.5 g/dL</option><option value="3">&lt;2.8 g/dL</option></select></div>
+        <div class="field"><label>INR / PT</label><select id="cp-inr"><option value="1">&lt;1.7 (PT &lt;4 sec prolonged)</option><option value="2">1.7–2.3 (4–6 sec prolonged)</option><option value="3">&gt;2.3 (&gt;6 sec prolonged)</option></select></div>
+        <div class="field"><label>Ascites</label><select id="cp-asc"><option value="1">None</option><option value="2">Mild / controlled with diuretics</option><option value="3">Moderate–severe / refractory</option></select></div>
+        <div class="field"><label>Hepatic Encephalopathy</label><select id="cp-enc"><option value="1">None</option><option value="2">Grade I–II</option><option value="3">Grade III–IV</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcChildPugh()">Calculate</button>
+        <button class="reset-btn" onclick="resetCalc('cp-result',['cp-bili','cp-alb','cp-inr','cp-asc','cp-enc'])">Reset</button>
+      </div>
+      <div class="result-box" id="cp-result"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ═══════════════════ FIB-4 ════════════════════════ -->
+  <div class="calc-card" id="fib4">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">LIVER</div>
+      <div><div class="calc-title">FIB-4 Index</div><div class="calc-subtitle">Non-invasive hepatic fibrosis — low / indeterminate / high with age-adjusted cutoffs</div></div>
+    </div>
+    <div class="calc-body">
+      <div class="form-grid">
+        <div class="field"><label>Age (years)</label><input type="number" id="f4-age" inputmode="numeric" placeholder="e.g. 52"></div>
+        <div class="field"><label>AST (U/L)</label><input type="number" id="f4-ast" inputmode="numeric" placeholder="e.g. 45"></div>
+        <div class="field"><label>ALT (U/L)</label><input type="number" id="f4-alt" inputmode="numeric" placeholder="e.g. 55"></div>
+        <div class="field"><label>Platelets (×10⁹/L)</label><input type="number" id="f4-plt" inputmode="numeric" placeholder="e.g. 180"></div>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcFIB4()">Calculate</button>
+        <button class="reset-btn" onclick="resetCalc('fib4-result',['f4-age','f4-ast','f4-alt','f4-plt'])">Reset</button>
+      </div>
+      <div class="result-box" id="fib4-result"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ═══════════════════ MDF ══════════════════════════ -->
+  <div class="calc-card" id="mdf">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">LIVER</div>
+      <div><div class="calc-title">Maddrey's Discriminant Function</div><div class="calc-subtitle">Alcoholic hepatitis severity — steroid therapy threshold ≥32</div></div>
+    </div>
+    <div class="calc-body">
+      <div class="form-grid">
+        <div class="field"><label>Patient PT (seconds)</label><input type="number" id="mdf-ptpat" inputmode="decimal" step="0.1" placeholder="e.g. 18.5"></div>
+        <div class="field"><label>Control PT (seconds)</label><input type="number" id="mdf-ptctl" inputmode="decimal" step="0.1" placeholder="e.g. 11.5"><span class="hint">Normal lab reference (typically 10.5–13.5 s)</span></div>
+        <div class="field"><label>Total Bilirubin (mg/dL)</label><input type="number" id="mdf-bili" inputmode="decimal" step="0.1" placeholder="e.g. 12.0"></div>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcMDF()">Calculate</button>
+        <button class="reset-btn" onclick="resetCalc('mdf-result',['mdf-ptpat','mdf-ptctl','mdf-bili'])">Reset</button>
+      </div>
+      <div class="result-box" id="mdf-result"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ═══════════════════ LILLE ════════════════════════ -->
+  <div class="calc-card" id="lille">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">LIVER</div>
+      <div><div class="calc-title">Lille Model</div><div class="calc-subtitle">Steroid response in alcoholic hepatitis — day-7 bilirubin predicts 6-month survival</div></div>
+    </div>
+    <div class="calc-body">
+      <div class="form-grid">
+        <div class="field"><label>Age (years)</label><input type="number" id="lil-age" inputmode="numeric" placeholder="e.g. 52"></div>
+        <div class="field"><label>Albumin Day 0 (g/L)</label><input type="number" id="lil-alb" inputmode="decimal" step="0.1" placeholder="e.g. 28"><span class="hint">g/L — multiply g/dL × 10</span></div>
+        <div class="field"><label>Bilirubin Day 0 (µmol/L)</label><input type="number" id="lil-bili0" inputmode="decimal" step="0.1" placeholder="e.g. 250"><span class="hint">µmol/L — multiply mg/dL × 17.1</span></div>
+        <div class="field"><label>Bilirubin Day 7 (µmol/L)</label><input type="number" id="lil-bili7" inputmode="decimal" step="0.1" placeholder="e.g. 180"></div>
+        <div class="field"><label>Prothrombin Time (seconds)</label><input type="number" id="lil-pt" inputmode="decimal" step="0.1" placeholder="e.g. 22"></div>
+        <div class="field"><label>Renal Insufficiency</label><select id="lil-ri"><option value="0">No (Cr ≤115 µmol/L)</option><option value="1">Yes (Cr &gt;115 µmol/L)</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcLille()">Calculate</button>
+        <button class="reset-btn" onclick="resetCalc('lille-result',['lil-age','lil-alb','lil-bili0','lil-bili7','lil-pt','lil-ri'])">Reset</button>
+      </div>
+      <div class="result-box" id="lille-result"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ═══════════════════ MAYO PSC ═════════════════════ -->
+  <div class="calc-card" id="mayopsc">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">LIVER</div>
+      <div><div class="calc-title">Mayo PSC Risk Score</div><div class="calc-subtitle">Primary sclerosing cholangitis — estimated transplant-free survival</div></div>
+    </div>
+    <div class="calc-body">
+      <div class="form-grid">
+        <div class="field"><label>Age (years)</label><input type="number" id="psc-age" inputmode="numeric" placeholder="e.g. 42"></div>
+        <div class="field"><label>Bilirubin (mg/dL)</label><input type="number" id="psc-bili" inputmode="decimal" step="0.01" placeholder="e.g. 1.2"></div>
+        <div class="field"><label>AST (U/L)</label><input type="number" id="psc-ast" inputmode="numeric" placeholder="e.g. 90"></div>
+        <div class="field"><label>Albumin (g/dL)</label><input type="number" id="psc-alb" inputmode="decimal" step="0.1" placeholder="e.g. 3.8"></div>
+        <div class="field"><label>Variceal Bleeding</label><select id="psc-var"><option value="0">No</option><option value="1">Yes</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcMayoPSC()">Calculate</button>
+        <button class="reset-btn" onclick="resetCalc('mayopsc-result',['psc-age','psc-bili','psc-ast','psc-alb','psc-var'])">Reset</button>
+      </div>
+      <div class="result-box" id="mayopsc-result"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ═══════════════════ GLASGOW-BLATCHFORD ════════════ -->
+  <div class="calc-card" id="glasgow">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">GI BLEEDING</div>
+      <div><div class="calc-title">Glasgow-Blatchford Score</div><div class="calc-subtitle">Upper GI bleed — full 23-point scale, intervention &amp; transfusion risk</div></div>
+    </div>
+    <div class="calc-body">
+      <div class="form-grid">
+        <div class="field"><label>BUN (mg/dL)</label><select id="gbs-bun"><option value="0">&lt;18.2</option><option value="2">18.2–22.3</option><option value="3">22.4–27.9</option><option value="4">28.0–69.9</option><option value="6">≥70.0</option></select><span class="hint">mg/dL equivalents of original mmol/L thresholds</span></div>
+        <div class="field"><label>Sex</label><select id="gbs-sex"><option value="male">Male</option><option value="female">Female</option></select></div>
+        <div class="field"><label>Hemoglobin (g/dL)</label><select id="gbs-hgb"><option value="">— select sex first —</option></select></div>
+        <div class="field"><label>Systolic BP (mmHg)</label><select id="gbs-sbp"><option value="0">≥110</option><option value="1">100–109</option><option value="2">90–99</option><option value="3">&lt;90</option></select></div>
+        <div class="field"><label>Pulse ≥100 bpm</label><select id="gbs-hr"><option value="0">No</option><option value="1">Yes</option></select></div>
+      </div>
+      <div class="section-label">Presentation Features</div>
+      <div class="check-group" style="margin-bottom:14px">
+        <label class="check-item"><input type="checkbox" id="gbs-melena"> Melena <span style="color:var(--muted);margin-left:4px;font-size:12px">(+1)</span></label>
+        <label class="check-item"><input type="checkbox" id="gbs-syncope"> Syncope <span style="color:var(--muted);margin-left:4px;font-size:12px">(+2)</span></label>
+        <label class="check-item"><input type="checkbox" id="gbs-liver"> Hepatic disease / cirrhosis <span style="color:var(--muted);margin-left:4px;font-size:12px">(+2)</span></label>
+        <label class="check-item"><input type="checkbox" id="gbs-cardiac"> Cardiac failure <span style="color:var(--muted);margin-left:4px;font-size:12px">(+2)</span></label>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcGBS()">Calculate</button>
+        <button class="reset-btn" onclick="resetGBS()">Reset</button>
+      </div>
+      <div class="result-box" id="gbs-result"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ═══════════════════ OAKLAND ══════════════════════ -->
+  <div class="calc-card" id="oakland">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">GI BLEEDING</div>
+      <div><div class="calc-title">Oakland Score</div><div class="calc-subtitle">Lower GI bleed — 0–35 scale, safe discharge ≤8 (95%) or ≤10 (99%)</div></div>
+    </div>
+    <div class="calc-body">
+      <div class="form-grid">
+        <div class="field"><label>Age</label><select id="oak-age"><option value="0">&lt;40 years</option><option value="3">40–69 years</option><option value="5">≥70 years</option></select></div>
+        <div class="field"><label>Sex</label><select id="oak-sex"><option value="0">Female</option><option value="1">Male</option></select></div>
+        <div class="field"><label>Previous LGIB Admission</label><select id="oak-prev"><option value="0">No</option><option value="1">Yes</option></select></div>
+        <div class="field"><label>DRE Finding</label><select id="oak-dre"><option value="0">No blood on DRE</option><option value="1">Blood on DRE</option></select></div>
+        <div class="field"><label>Heart Rate (bpm)</label><select id="oak-hr"><option value="0">&lt;70</option><option value="1">70–89</option><option value="2">90–109</option><option value="3">≥110</option></select></div>
+        <div class="field"><label>Systolic BP (mmHg)</label><select id="oak-sbp"><option value="0">≥160</option><option value="1">130–159</option><option value="2">110–129</option><option value="3">90–109</option><option value="4">&lt;90</option></select></div>
+        <div class="field"><label>Hemoglobin (g/dL)</label><select id="oak-hgb"><option value="0">&gt;16.0</option><option value="1">13.1–16.0</option><option value="2">11.1–13.0</option><option value="3">9.1–11.0</option><option value="4">7.1–9.0</option><option value="5">≤7.0</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcOakland()">Calculate</button>
+        <button class="reset-btn" onclick="resetCalc('oak-result',['oak-age','oak-sex','oak-prev','oak-dre','oak-hr','oak-sbp','oak-hgb'])">Reset</button>
+      </div>
+      <div class="result-box" id="oak-result"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ═══════════════════ ROCKALL ══════════════════════ -->
+  <div class="calc-card" id="rockall">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">GI BLEEDING</div>
+      <div><div class="calc-title">Rockall Score</div><div class="calc-subtitle">Post-endoscopy rebleed &amp; mortality risk for upper GI bleeding</div></div>
+    </div>
+    <div class="calc-body">
+      <div class="section-label">Pre-Endoscopy Variables</div>
+      <div class="form-grid">
+        <div class="field"><label>Age</label><select id="rock-age"><option value="0">&lt;60 years</option><option value="1">60–79 years</option><option value="2">≥80 years</option></select></div>
+        <div class="field"><label>Shock</label><select id="rock-shock"><option value="0">No shock (SBP ≥100, HR &lt;100)</option><option value="1">Tachycardia (SBP ≥100, HR ≥100)</option><option value="2">Hypotension (SBP &lt;100)</option></select></div>
+        <div class="field"><label>Comorbidity</label><select id="rock-comorbid"><option value="0">None</option><option value="2">Cardiac failure / IHD / major comorbidity</option><option value="3">Renal / liver failure / metastatic cancer</option></select></div>
+      </div>
+      <div class="section-label">Endoscopic Variables</div>
+      <div class="form-grid">
+        <div class="field"><label>Diagnosis</label><select id="rock-dx"><option value="0">Mallory-Weiss / no lesion / no SRH</option><option value="1">All other diagnoses</option><option value="2">Upper GI malignancy</option></select></div>
+        <div class="field"><label>Stigmata of Recent Hemorrhage</label><select id="rock-srh"><option value="0">None / dark spot only</option><option value="2">Blood in tract / adherent clot / visible / spurting vessel</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcRockall()">Calculate</button>
+        <button class="reset-btn" onclick="resetCalc('rock-result',['rock-age','rock-shock','rock-comorbid','rock-dx','rock-srh'])">Reset</button>
+      </div>
+      <div class="result-box" id="rock-result"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ═══════════════════ ECKARDT ══════════════════════ -->
+  <div class="calc-card" id="eckardt">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">MOTILITY</div>
+      <div><div class="calc-title">Eckardt Score</div><div class="calc-subtitle">Achalasia symptom severity — 0–12, Grade 0–III; remission ≤3</div></div>
+    </div>
+    <div class="calc-body">
+      <div class="form-grid">
+        <div class="field"><label>Dysphagia</label><select id="eck-dys"><option value="0">0 — Never</option><option value="1">1 — Occasional</option><option value="2">2 — Daily</option><option value="3">3 — Each meal</option></select></div>
+        <div class="field"><label>Regurgitation</label><select id="eck-reg"><option value="0">0 — Never</option><option value="1">1 — Occasional</option><option value="2">2 — Daily</option><option value="3">3 — Each meal</option></select></div>
+        <div class="field"><label>Retrosternal Pain</label><select id="eck-pain"><option value="0">0 — Never</option><option value="1">1 — Occasional</option><option value="2">2 — Daily</option><option value="3">3 — Each meal</option></select></div>
+        <div class="field"><label>Weight Loss</label><select id="eck-wt"><option value="0">0 — None</option><option value="1">1 — &lt;5 kg</option><option value="2">2 — 5–10 kg</option><option value="3">3 — &gt;10 kg</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcEckardt()">Calculate</button>
+        <button class="reset-btn" onclick="resetCalc('eck-result',['eck-dys','eck-reg','eck-pain','eck-wt'])">Reset</button>
+      </div>
+      <div class="result-box" id="eck-result"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ═══════════════════ HARVEY-BRADSHAW ══════════════ -->
+  <div class="calc-card" id="hbi">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">IBD</div>
+      <div><div class="calc-title">Harvey-Bradshaw Index (HBI)</div><div class="calc-subtitle">Crohn's disease — remission &lt;5, mild 5–7, moderate 8–16, severe &gt;16</div></div>
+    </div>
+    <div class="calc-body">
+      <div class="form-grid">
+        <div class="field"><label>General Well-being (past 24 h)</label><select id="hbi-wb"><option value="0">0 — Very well</option><option value="1">1 — Slightly below par</option><option value="2">2 — Poor</option><option value="3">3 — Very poor</option><option value="4">4 — Terrible</option></select></div>
+        <div class="field"><label>Abdominal Pain</label><select id="hbi-pain"><option value="0">0 — None</option><option value="1">1 — Mild</option><option value="2">2 — Moderate</option><option value="3">3 — Severe</option></select></div>
+        <div class="field"><label>Liquid Stools per Day</label><input type="number" id="hbi-stools" inputmode="numeric" placeholder="e.g. 3" min="0"><span class="hint">Count of liquid/very soft stools in past 24 h</span></div>
+        <div class="field"><label>Abdominal Mass</label><select id="hbi-mass"><option value="0">0 — None</option><option value="1">1 — Dubious</option><option value="2">2 — Definite</option><option value="3">3 — Definite and tender</option></select></div>
+      </div>
+      <div class="section-label">Complications (each = +1 point)</div>
+      <div class="check-group" style="margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr;gap:0">
+        <label class="check-item"><input type="checkbox" class="hbi-comp"> Arthralgia / arthritis</label>
+        <label class="check-item"><input type="checkbox" class="hbi-comp"> Uveitis / iritis</label>
+        <label class="check-item"><input type="checkbox" class="hbi-comp"> Erythema nodosum</label>
+        <label class="check-item"><input type="checkbox" class="hbi-comp"> Aphthous ulcers</label>
+        <label class="check-item"><input type="checkbox" class="hbi-comp"> Pyoderma gangrenosum</label>
+        <label class="check-item"><input type="checkbox" class="hbi-comp"> Anal fissure</label>
+        <label class="check-item"><input type="checkbox" class="hbi-comp"> New fistula</label>
+        <label class="check-item"><input type="checkbox" class="hbi-comp"> Abscess</label>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcHBI()">Calculate</button>
+        <button class="reset-btn" onclick="resetHBI()">Reset</button>
+      </div>
+      <div class="result-box" id="hbi-result"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ═══════════════════ MAYO (UC) ════════════════════ -->
+  <div class="calc-card" id="mayo">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">IBD</div>
+      <div><div class="calc-title">Full Mayo Score (UC)</div><div class="calc-subtitle">Ulcerative colitis — 0–12, all four subscores including endoscopy</div></div>
+    </div>
+    <div class="calc-body">
+      <div class="form-grid">
+        <div class="field"><label>Stool Frequency (above normal)</label><select id="mayo-sf"><option value="0">0 — Normal</option><option value="1">1 — 1–2/day more than normal</option><option value="2">2 — 3–4/day more than normal</option><option value="3">3 — ≥5/day more than normal</option></select></div>
+        <div class="field"><label>Rectal Bleeding</label><select id="mayo-rb"><option value="0">0 — None</option><option value="1">1 — Streaks of blood (&lt;50% of time)</option><option value="2">2 — Obvious blood with most stools</option><option value="3">3 — Blood alone passed</option></select></div>
+        <div class="field"><label>Mucosal Appearance (Endoscopy)</label><select id="mayo-muc"><option value="0">0 — Normal / inactive</option><option value="1">1 — Mild (erythema, decreased vascular pattern)</option><option value="2">2 — Moderate (marked erythema, friability, erosions)</option><option value="3">3 — Severe (spontaneous bleeding, ulceration)</option></select></div>
+        <div class="field"><label>Physician Global Assessment</label><select id="mayo-pga"><option value="0">0 — Normal</option><option value="1">1 — Mild disease</option><option value="2">2 — Moderate disease</option><option value="3">3 — Severe disease</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcMayo()">Calculate</button>
+        <button class="reset-btn" onclick="resetCalc('mayo-result',['mayo-sf','mayo-rb','mayo-muc','mayo-pga'])">Reset</button>
+      </div>
+      <div class="result-box" id="mayo-result"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ═══════════════════ BISAP ════════════════════════ -->
+  <div class="calc-card" id="bisap">
+   <div class="calc-card-inner">
+    <div class="calc-header">
+      <div class="calc-tag">PANCREAS</div>
+      <div><div class="calc-title">BISAP Score</div><div class="calc-subtitle">Bedside Index of Severity in Acute Pancreatitis — 5-point with mortality</div></div>
+    </div>
+    <div class="calc-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Scored within first 24 hours. Each criterion present = 1 point.</p>
+      <div class="check-group" style="margin-bottom:16px">
+        <label class="check-item"><input type="checkbox" id="bisap-bun"><div><strong>BUN &gt;25 mg/dL</strong><div style="font-size:12px;color:var(--muted)">On admission</div></div></label>
+        <label class="check-item"><input type="checkbox" id="bisap-ms"><div><strong>Impaired mental status</strong><div style="font-size:12px;color:var(--muted)">Disorientation, lethargy, somnolence, coma, or stupor</div></div></label>
+        <label class="check-item"><input type="checkbox" id="bisap-sirs"><div><strong>SIRS ≥2 criteria</strong><div style="font-size:12px;color:var(--muted)">Temp &lt;36 or &gt;38°C · HR &gt;90 · RR &gt;20 · WBC &lt;4 or &gt;12 ×10³/µL</div></div></label>
+        <label class="check-item"><input type="checkbox" id="bisap-age"><div><strong>Age &gt;60 years</strong></div></label>
+        <label class="check-item"><input type="checkbox" id="bisap-pe"><div><strong>Pleural effusion on imaging</strong></div></label>
+      </div>
+      <div class="btn-row">
+        <button class="calc-btn" onclick="calcBISAP()">Calculate</button>
+        <button class="reset-btn" onclick="resetBISAP()">Reset</button>
+      </div>
+      <div class="result-box" id="bisap-result"></div>
+    </div>
+   </div>
+  </div>
+
+</main>
+
+<script>
+// ══ SCORE REFERENCE DATA ════════════════════════════
+const scoreRefs = {
+  meld30: {
+    rows: [
+      { range: '< 10',  label: '~1.9% 3-month mortality', dot: 'green' },
+      { range: '10–19', label: '~6% 3-month mortality',   dot: 'green' },
+      { range: '20–29', label: '~19.6% mortality',        dot: 'yellow' },
+      { range: '30–39', label: '~52.6% mortality',        dot: 'orange' },
+      { range: '≥ 40',  label: '~71.3% mortality',        dot: 'red' },
+    ],
+    notes: ['≥15 — consider transplant listing evaluation','≥25 — high urgency; escalate care','UNOS uses MELD 3.0 for allocation since 2022']
+  },
+  childpugh: {
+    rows: [
+      { range: '5–6',   label: 'Class A — 1yr 100%, 2yr 85%, periop mortality 10%',  dot: 'green' },
+      { range: '7–9',   label: 'Class B — 1yr 81%, 2yr 57%, periop mortality 30%',   dot: 'yellow' },
+      { range: '10–15', label: 'Class C — 1yr 45%, 2yr 35%, periop mortality 82%',   dot: 'red' },
+    ],
+    notes: ['Class C — decompensated; refer for transplant evaluation','Class B/C — avoid elective major surgery','Periop mortality estimates are for abdominal surgery']
+  },
+  fib4: {
+    rows: [
+      { range: '< 1.30',    label: 'Low — rules out advanced fibrosis (F0–F1), NPV ~90%', dot: 'green' },
+      { range: '1.30–2.67', label: 'Indeterminate — elastography or biopsy recommended',   dot: 'yellow' },
+      { range: '> 2.67',    label: 'High — suggests cirrhosis (F3–F4), PPV ~65–80%',       dot: 'red' },
+    ],
+    notes: ['Age <35: cutoffs shift to 0.70 / 1.30','Age >65: cutoffs shift to 2.00 / 4.00','Formula: (Age × AST) ÷ (Platelets × √ALT)']
+  },
+  mdf: {
+    rows: [
+      { range: '< 32', label: 'Mild–moderate — <15% 28-day mortality; steroids not indicated', dot: 'green' },
+      { range: '≥ 32', label: 'Severe — 35–45% mortality; consider prednisolone 40 mg/day',   dot: 'red' },
+    ],
+    notes: ['Prednisolone 40 mg/day × 28 days if no contraindications','Contraindications: active infection, GI bleed, hepatorenal syndrome','Reassess steroid response with Lille model at day 7']
+  },
+  lille: {
+    rows: [
+      { range: '≤ 0.45',      label: 'Responder — ~85% 6-month survival; continue steroids',    dot: 'green' },
+      { range: '0.45–0.56',   label: 'Partial responder — ~50% 6-month survival',                dot: 'yellow' },
+      { range: '> 0.56',      label: 'Non-responder — ~25% survival; consider stopping steroids', dot: 'red' },
+    ],
+    notes: ['Bilirubin decrease D0→D7 is the key driver','Non-responders — discuss early liver transplant evaluation','Cutoff of 0.45 optimises sensitivity/specificity']
+  },
+  mayopsc: {
+    rows: [
+      { range: 'Low score',  label: 'Better transplant-free survival', dot: 'green' },
+      { range: 'High score', label: 'Reduced transplant-free survival', dot: 'red' },
+    ],
+    notes: ['Estimates are approximations (Kim WR et al. 2000)','Not validated for patients on UDCA therapy','Rising score over time indicates disease progression','Consider transplant listing when 1-yr survival <80%']
+  },
+  glasgow: {
+    rows: [
+      { range: '0',     label: 'Very low — safe for outpatient management, ~0.5% intervention risk', dot: 'green' },
+      { range: '1–2',   label: 'Low — ~5–8% intervention risk; admit recommended',                   dot: 'green' },
+      { range: '3–5',   label: 'Moderate — ~20–30% intervention risk',                               dot: 'yellow' },
+      { range: '6–11',  label: 'High — ~50–60% intervention risk',                                   dot: 'orange' },
+      { range: '≥ 12',  label: 'Very high — >80% intervention risk',                                 dot: 'red' },
+    ],
+    notes: ['Score 0 — only group safe for discharge without endoscopy','Score ≥6 — high likelihood of needing transfusion or intervention','Max score 23']
+  },
+  oakland: {
+    rows: [
+      { range: '≤ 8',   label: 'Safe discharge — 95% probability of no adverse outcome', dot: 'green' },
+      { range: '≤ 10',  label: 'Extended threshold — 99% safe outcome (some validations)', dot: 'green' },
+      { range: '11–14', label: 'Admit for observation and colonoscopy planning',           dot: 'yellow' },
+      { range: '≥ 15',  label: 'High risk — inpatient management, urgent colonoscopy',    dot: 'red' },
+    ],
+    notes: ['Score out of 35 total points','Validated for acute lower GI bleeding only','Does not replace clinical judgement for haemodynamic instability']
+  },
+  rockall: {
+    rows: [
+      { range: '0',   label: 'Rebleed 4.9%, mortality 0%',   dot: 'green' },
+      { range: '1',   label: 'Rebleed 3.4%, mortality 0%',   dot: 'green' },
+      { range: '2',   label: 'Rebleed 5.3%, mortality 0.2%', dot: 'green' },
+      { range: '3',   label: 'Rebleed 11.2%, mortality 2.9%',dot: 'yellow' },
+      { range: '4',   label: 'Rebleed 14.1%, mortality 5.3%',dot: 'yellow' },
+      { range: '5',   label: 'Rebleed 24.1%, mortality 10.8%',dot: 'orange' },
+      { range: '6',   label: 'Rebleed 32.9%, mortality 17.3%',dot: 'orange' },
+      { range: '≥ 7', label: 'Rebleed >40%, mortality >27%', dot: 'red' },
+    ],
+    notes: ['Score ≤2 — consider early discharge after endoscopy','Score ≥5 — ICU-level monitoring; consider repeat endoscopy','Post-endoscopy score more predictive than pre-endoscopy']
+  },
+  eckardt: {
+    rows: [
+      { range: '0–1',  label: 'Grade 0 — remission',          dot: 'green' },
+      { range: '2–3',  label: 'Grade I — remission',           dot: 'green' },
+      { range: '4–6',  label: 'Grade II — moderate symptoms',  dot: 'yellow' },
+      { range: '≥ 7',  label: 'Grade III — severe symptoms',   dot: 'red' },
+    ],
+    notes: ['≤3 defines clinical remission / treatment success','Score >3 after treatment — consider repeat pneumatic dilation or Heller myotomy / POEM','Each of 4 domains scored 0–3 (max 12)']
+  },
+  hbi: {
+    rows: [
+      { range: '< 5',  label: 'Remission',         dot: 'green' },
+      { range: '5–7',  label: 'Mild disease',       dot: 'yellow' },
+      { range: '8–16', label: 'Moderate disease',   dot: 'orange' },
+      { range: '> 16', label: 'Severe disease',     dot: 'red' },
+    ],
+    notes: ['Remission <5 is the standard trial endpoint','Correlates well with CDAI (r ≈ 0.93)','Each complication (arthralgia, fistula, etc.) adds 1 point','Does not include CRP or endoscopic assessment']
+  },
+  mayo: {
+    rows: [
+      { range: '0–2',   label: 'Remission (requires all subscores ≤1)', dot: 'green' },
+      { range: '3–5',   label: 'Mild disease',                           dot: 'yellow' },
+      { range: '6–10',  label: 'Moderate disease',                       dot: 'orange' },
+      { range: '11–12', label: 'Severe disease',                         dot: 'red' },
+    ],
+    notes: ['Remission: total ≤2 AND no individual subscore >1','Clinical response: ≥3-point decrease + ≥30% reduction + rectal bleeding subscore decrease ≥1','Endoscopic subscore 0–1 = mucosal healing','Partial Mayo (subscores 1–3 only) used when endoscopy unavailable']
+  },
+  bisap: {
+    rows: [
+      { range: '0', label: '<1% in-hospital mortality',   dot: 'green' },
+      { range: '1', label: '<2% mortality',               dot: 'green' },
+      { range: '2', label: '~2% mortality, ~5% organ failure',  dot: 'yellow' },
+      { range: '3', label: '~5–9% mortality, ~15–25% organ failure', dot: 'orange' },
+      { range: '4', label: '~13% mortality',              dot: 'red' },
+      { range: '5', label: '~22% mortality',              dot: 'red' },
+    ],
+    notes: ['Score ≥3 — consider ICU admission','Scored in first 24 hours of presentation only','SIRS requires ≥2 of 4 criteria','Comparable accuracy to Ranson and APACHE II with fewer variables']
+  },
+};
+
+function buildScoreRef(id) {
+  const ref = scoreRefs[id];
+  if (!ref) return '';
+  const rows = ref.rows.map(r => `
+    <div class="score-ref-row">
+      <div class="score-ref-dot dot-${r.dot}"></div>
+      <div class="score-ref-range">${r.range}</div>
+      <div class="score-ref-label">${r.label}</div>
+    </div>`).join('');
+  const notes = ref.notes ? ref.notes.map(n => `<div class="score-ref-note">${n}</div>`).join('') : '';
+  return `<div class="score-ref">
+    <div class="score-ref-title">Score Reference</div>
+    ${rows}
+    ${notes ? `<div class="score-ref-notes">${notes}</div>` : ''}
+  </div>`;
+}
+
+// ══ TWO-COLUMN LAYOUT ═══════════════════════════════
+document.querySelectorAll('.calc-body').forEach(body => {
+  const card = body.closest('.calc-card');
+  const id = card ? card.id : null;
+  const result = body.querySelector('.result-box');
+
+  const left = document.createElement('div');
+  left.className = 'calc-left';
+  Array.from(body.children).forEach(child => {
+    if (!child.classList.contains('result-box')) left.appendChild(child);
+  });
+
+  const right = document.createElement('div');
+  right.className = 'calc-right';
+  const label = document.createElement('div');
+  label.className = 'calc-right-label';
+  label.textContent = 'Result';
+  const empty = document.createElement('div');
+  empty.className = 'calc-empty-state';
+  empty.innerHTML = `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg><p>Fill in the fields and tap Calculate</p>`;
+  right.appendChild(label);
+  right.appendChild(empty);
+  right.appendChild(result);
+  if (id) right.insertAdjacentHTML('beforeend', buildScoreRef(id));
+  body.appendChild(left);
+  body.appendChild(right);
+
+  // Hide empty state when result shows
+  const obs = new MutationObserver(() => {
+    empty.style.display = result.classList.contains('show') ? 'none' : '';
+  });
+  obs.observe(result, { attributes: true, attributeFilter: ['class'] });
+});
+
+// ══ UTILITIES ═══════════════════════════════════════
+function v(id) { return document.getElementById(id); }
+function val(id) { return parseFloat(v(id).value); }
+function ival(id) { return parseInt(v(id).value); }
+function sval(id) { return v(id).value; }
+function chk(id) { return v(id).checked ? 1 : 0; }
+
+function show(id, html) {
+  const el = v(id);
+  el.innerHTML = html;
+  el.classList.add('show');
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function resetCalc(resultId, fieldIds) {
+  v(resultId).classList.remove('show');
+  fieldIds.forEach(id => {
+    const el = v(id);
+    if (!el) return;
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+}
+
+function badge(cls, txt) { return `<span class="badge badge-${cls}">${txt}</span>`; }
+
+// ══ FILTER ══════════════════════════════════════════
+function setFilter(cat) {
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.toggle('active', p.dataset.filter === cat));
+  document.querySelectorAll('.home-tile').forEach(t => {
+    t.classList.toggle('hidden', cat !== 'all' && t.dataset.cat !== cat);
+  });
+}
+
+// ══ TAB NAVIGATION ══════════════════════════════════
+const calcTitles = {
+  meld30:'MELD 3.0', childpugh:'Child-Pugh', fib4:'FIB-4',
+  mdf:'Maddrey DF', lille:'Lille Model', mayopsc:'Mayo PSC',
+  glasgow:'Glasgow-Blatchford', oakland:'Oakland Score', rockall:'Rockall Score',
+  eckardt:'Eckardt Score', hbi:'Harvey-Bradshaw', mayo:'Mayo Score (UC)', bisap:'BISAP'
+};
+
+function showCalc(id) {
+  v('home-view').style.display = 'none';
+  document.querySelectorAll('.calc-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+
+  const card = v(id);
+  card.classList.add('active');
+
+  const link = document.querySelector(`nav a[onclick="showCalc('${id}')"]`);
+  if (link) link.classList.add('active');
+
+  // Desktop back button (injected once)
+  if (!card.querySelector('.back-btn')) {
+    const btn = document.createElement('button');
+    btn.className = 'back-btn';
+    btn.innerHTML = '← All calculators';
+    btn.onclick = showHome;
+    card.querySelector('.calc-body').prepend(btn);
+  }
+
+  // Mobile header
+  v('mobile-back').style.display = 'inline-flex';
+  v('mobile-title').textContent = calcTitles[id] || 'Calculator';
+  window.scrollTo(0, 0);
+}
+
+function showHome() {
+  v('home-view').style.display = '';
+  document.querySelectorAll('.calc-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  v('mobile-back').style.display = 'none';
+  v('mobile-title').textContent = 'GI Calculators';
+}
+
+// ══ MELD 3.0 ════════════════════════════════════════
+function calcMELD30() {
+  let cr = val('m3-cr'), bili = val('m3-bili'), inr = val('m3-inr');
+  let na = val('m3-na'), alb = val('m3-alb'), female = ival('m3-sex');
+  if ([cr,bili,inr,na,alb].some(isNaN)) { alert('Please fill in all fields.'); return; }
+  cr = Math.max(1.0, Math.min(3.0, cr));
+  bili = Math.max(1.0, bili);
+  inr = Math.max(1.0, inr);
+  na = Math.max(125, Math.min(137, na));
+  let meld = 1.33*female + 4.56*Math.log(bili) + 0.82*(137-na) - 0.24*(137-na)*Math.log(cr) + 9.09*Math.log(inr) + 11.14*Math.log(cr) + 8;
+  if (alb < 3.5) meld += 1.33;
+  meld = Math.max(6, Math.round(meld*10)/10);
+  let mortality3mo, color;
+  if (meld < 10)      { mortality3mo='~1.9%'; color='green'; }
+  else if (meld < 20) { mortality3mo='~6%';   color='green'; }
+  else if (meld < 30) { mortality3mo='~19.6%';color='yellow';}
+  else if (meld < 40) { mortality3mo='~52.6%';color='orange';}
+  else                { mortality3mo='~71.3%';color='red';   }
+  show('meld30-result', `
+    <div class="result-score color-${color}">${meld.toFixed(1)}</div>
+    <div class="result-label">MELD 3.0 Score</div>
+    <div class="result-row">
+      <div class="result-stat"><div class="stat-val color-${color}">${mortality3mo}</div><div class="stat-lbl">3-month mortality</div></div>
+      <div class="result-stat"><div class="stat-val">${meld<15?'Low':meld<25?'Moderate':'High'}</div><div class="stat-lbl">Transplant urgency</div></div>
+    </div>
+    <div class="result-details" style="margin-top:12px">
+      ${badge('blue','Note')} Score ≥15 warrants transplant listing evaluation. UNOS uses MELD 3.0 for allocation as of 2022.
+      <br>Inputs used: Cr ${cr.toFixed(2)} · Bili ${bili.toFixed(2)} · INR ${inr.toFixed(2)} · Na ${na} · Alb ${alb}${female?' · Female +1.33':''}${alb<3.5?' · Alb <3.5 +1.33':''}.
+    </div>`);
+}
+
+// ══ CHILD-PUGH ══════════════════════════════════════
+function calcChildPugh() {
+  const bili=ival('cp-bili'),alb=ival('cp-alb'),inr=ival('cp-inr'),asc=ival('cp-asc'),enc=ival('cp-enc');
+  const total=bili+alb+inr+asc+enc;
+  let cls,oneYrSurv,twoYrSurv,periOpMort,color;
+  if (total<=6)      { cls='A';oneYrSurv='100%';twoYrSurv='85%';periOpMort='10%';color='green'; }
+  else if (total<=9) { cls='B';oneYrSurv='81%'; twoYrSurv='57%';periOpMort='30%';color='yellow';}
+  else               { cls='C';oneYrSurv='45%'; twoYrSurv='35%';periOpMort='82%';color='red';   }
+  show('cp-result', `
+    <div class="result-score color-${color}">${total} ${badge(cls==='A'?'green':cls==='B'?'yellow':'red','Class '+cls)}</div>
+    <div class="result-label">Child-Pugh Score</div>
+    <div class="result-row">
+      <div class="result-stat"><div class="stat-val color-${color}">${oneYrSurv}</div><div class="stat-lbl">1-year survival</div></div>
+      <div class="result-stat"><div class="stat-val color-${color}">${twoYrSurv}</div><div class="stat-lbl">2-year survival</div></div>
+      <div class="result-stat"><div class="stat-val color-${color}">${periOpMort}</div><div class="stat-lbl">Perioperative mortality</div></div>
+    </div>
+    <div class="result-details" style="margin-top:12px">
+      ${badge('blue','Subscores')} Bili ${bili} + Alb ${alb} + INR ${inr} + Ascites ${asc} + Encephalopathy ${enc} = <strong>${total}</strong>
+      <br>Class A (5–6): well-compensated. Class B (7–9): significant impairment. Class C (10–15): decompensated.
+    </div>`);
+}
+
+// ══ FIB-4 ═══════════════════════════════════════════
+function calcFIB4() {
+  const age=val('f4-age'),ast=val('f4-ast'),alt=val('f4-alt'),plt=val('f4-plt');
+  if ([age,ast,alt,plt].some(isNaN)||alt<=0||plt<=0) { alert('Please fill in all fields.'); return; }
+  const fib4=Math.round((age*ast)/(plt*Math.sqrt(alt))*100)/100;
+  let lowCut=1.30,highCut=2.67,ageNote='';
+  if (age<35)      { lowCut=0.70;highCut=1.30;ageNote=' (age <35: cutoffs 0.70/1.30)'; }
+  else if (age>65) { lowCut=2.00;highCut=4.00;ageNote=' (age >65: cutoffs 2.00/4.00)'; }
+  let interp,color,extra;
+  if (fib4<lowCut)      { interp='Low — rules out advanced fibrosis (F0–F1)';  color='green'; extra='NPV for advanced fibrosis: ~90%'; }
+  else if (fib4<=highCut){ interp='Indeterminate — consider elastography or biopsy';color='yellow';extra='Further evaluation recommended.'; }
+  else                   { interp='High — suggests advanced fibrosis/cirrhosis (F3–F4)';color='red';extra='PPV for advanced fibrosis: ~65–80%'; }
+  show('fib4-result', `
+    <div class="result-score color-${color}">${fib4}</div>
+    <div class="result-label">${badge(color,fib4<lowCut?'Low':fib4<=highCut?'Indeterminate':'High')} ${interp}</div>
+    <div class="result-details" style="margin-top:10px">
+      Cutoffs${ageNote}: <strong>&lt;${lowCut}</strong> low · <strong>${lowCut}–${highCut}</strong> indeterminate · <strong>&gt;${highCut}</strong> high
+      <br>Formula: (${age} × ${ast}) ÷ (${plt} × √${alt}) = <strong>${fib4}</strong>
+      <br>${extra}
+    </div>`);
+}
+
+// ══ MDF ═════════════════════════════════════════════
+function calcMDF() {
+  const ptPat=val('mdf-ptpat'),ptCtl=val('mdf-ptctl'),bili=val('mdf-bili');
+  if ([ptPat,ptCtl,bili].some(isNaN)) { alert('Please fill in all fields.'); return; }
+  const mdf=Math.round((4.6*(ptPat-ptCtl)+bili)*10)/10;
+  const severe=mdf>=32;
+  show('mdf-result', `
+    <div class="result-score color-${severe?'red':'green'}">${mdf}</div>
+    <div class="result-label">${badge(severe?'red':'green',severe?'≥32 Severe':'<32 Mild–Moderate')}</div>
+    <div class="result-row">
+      <div class="result-stat"><div class="stat-val color-${severe?'red':'green'}">${severe?'~35–45%':'<15%'}</div><div class="stat-lbl">28-day mortality</div></div>
+      <div class="result-stat"><div class="stat-val">${severe?'Consider':'Not indicated'}</div><div class="stat-lbl">Corticosteroids</div></div>
+    </div>
+    <div class="result-details" style="margin-top:10px">
+      ${severe
+        ? badge('red','Action')+' MDF ≥32: consider prednisolone 40 mg/day × 28 days if no contraindications. Reassess with Lille model at day 7.'
+        : badge('green','Low Risk')+' MDF <32: supportive care, nutritional support, abstinence.'}
+      <br>4.6 × (${ptPat} − ${ptCtl}) + ${bili} = <strong>${mdf}</strong>
+    </div>`);
+}
+
+// ══ LILLE ═══════════════════════════════════════════
+function calcLille() {
+  const age=val('lil-age'),alb=val('lil-alb'),bili0=val('lil-bili0'),bili7=val('lil-bili7'),pt=val('lil-pt'),ri=ival('lil-ri');
+  if ([age,alb,bili0,bili7,pt].some(isNaN)) { alert('Please fill in all fields.'); return; }
+  const evolBili=bili0-bili7;
+  const R=3.19-0.101*age+0.147*alb+0.0165*evolBili-0.206*ri-0.0065*bili0-0.0096*pt;
+  const lille=Math.round(Math.exp(R)/(1+Math.exp(R))*1000)/1000;
+  const responder=lille<=0.45;
+  const surv6mo=responder?'~85%':lille<=0.56?'~50%':'~25%';
+  const color=responder?'green':lille<=0.56?'yellow':'red';
+  show('lille-result', `
+    <div class="result-score color-${color}">${lille}</div>
+    <div class="result-label">${badge(color,responder?'Responder ≤0.45':'Non-responder >0.45')}</div>
+    <div class="result-row">
+      <div class="result-stat"><div class="stat-val color-${color}">${surv6mo}</div><div class="stat-lbl">6-month survival</div></div>
+      <div class="result-stat"><div class="stat-val">${evolBili>0?'↓ '+Math.round(evolBili):'↑ '+Math.abs(Math.round(evolBili))} µmol/L</div><div class="stat-lbl">Bilirubin D0→D7</div></div>
+    </div>
+    <div class="result-details" style="margin-top:10px">
+      ${responder
+        ? badge('green','Continue')+' Steroid responder — complete 28-day prednisolone course.'
+        : badge('red','Discontinue')+' Non-responder — consider stopping steroids; discuss liver transplant evaluation.'}
+    </div>`);
+}
+
+// ══ MAYO PSC ════════════════════════════════════════
+function calcMayoPSC() {
+  const age=val('psc-age'),bili=val('psc-bili'),ast=val('psc-ast'),alb=val('psc-alb'),varBleed=ival('psc-var');
+  if ([age,bili,ast,alb].some(isNaN)||bili<=0||ast<=0) { alert('Please fill in all fields.'); return; }
+  const R=0.0295*age+0.5373*Math.log(bili+1)+0.8960*Math.log(ast)-0.8378*alb+1.2286*varBleed;
+  const surv1=Math.pow(0.9590,Math.exp(R));
+  const surv2=Math.pow(0.8890,Math.exp(R));
+  const surv5=Math.pow(0.6720,Math.exp(R));
+  const color=surv1>0.85?'green':surv1>0.70?'yellow':'red';
+  show('mayopsc-result', `
+    <div class="result-score color-${color}">${Math.round(R*100)/100}</div>
+    <div class="result-label">Mayo PSC Risk Score — Estimated transplant-free survival</div>
+    <div class="result-row">
+      <div class="result-stat"><div class="stat-val color-${color}">${(surv1*100).toFixed(0)}%</div><div class="stat-lbl">1-year</div></div>
+      <div class="result-stat"><div class="stat-val color-${color}">${(surv2*100).toFixed(0)}%</div><div class="stat-lbl">2-year</div></div>
+      <div class="result-stat"><div class="stat-val color-${color}">${(surv5*100).toFixed(0)}%</div><div class="stat-lbl">5-year</div></div>
+    </div>
+    <div class="result-details" style="margin-top:10px">
+      ${badge('yellow','Caution')} Approximations from Kim WR et al. (2000). Individual prognosis depends on disease trajectory and treatment response.
+    </div>`);
+}
+
+// ══ GLASGOW-BLATCHFORD ══════════════════════════════
+function updateHgbOptions() {
+  const sex=sval('gbs-sex');
+  const sel=v('gbs-hgb');
+  sel.innerHTML = sex==='male'
+    ? `<option value="0">≥13.0 g/dL</option><option value="1">12.0–12.9 g/dL</option><option value="3">10.0–11.9 g/dL</option><option value="6">&lt;10.0 g/dL</option>`
+    : `<option value="0">≥12.0 g/dL</option><option value="1">10.0–11.9 g/dL</option><option value="6">&lt;10.0 g/dL</option>`;
+}
+document.getElementById('gbs-sex').addEventListener('change', updateHgbOptions);
+updateHgbOptions();
+
+function calcGBS() {
+  const bun=ival('gbs-bun'),hgb=ival('gbs-hgb'),sbp=ival('gbs-sbp'),hr=ival('gbs-hr');
+  const melena=chk('gbs-melena'),syncope=chk('gbs-syncope')*2,liver=chk('gbs-liver')*2,cardiac=chk('gbs-cardiac')*2;
+  const total=bun+hgb+sbp+hr+melena+syncope+liver+cardiac;
+  let interp,color,intervention;
+  if (total===0)     { interp='Very low risk';color='green'; intervention='~0.5%'; }
+  else if (total<=2) { interp='Low risk';     color='green'; intervention='~5–8%'; }
+  else if (total<=5) { interp='Moderate risk';color='yellow';intervention='~20–30%';}
+  else if (total<=11){ interp='High risk';    color='orange';intervention='~50–60%';}
+  else               { interp='Very high risk';color='red'; intervention='>80%'; }
+  show('gbs-result', `
+    <div class="result-score color-${color}">${total} / 23</div>
+    <div class="result-label">${badge(color,interp)}</div>
+    <div class="result-row">
+      <div class="result-stat"><div class="stat-val color-${color}">${intervention}</div><div class="stat-lbl">Intervention risk</div></div>
+      <div class="result-stat"><div class="stat-val">${total===0?'Outpatient':'Admit'}</div><div class="stat-lbl">Disposition</div></div>
+    </div>
+    <div class="result-details" style="margin-top:10px">
+      ${total===0
+        ? badge('green','Safe Discharge')+' Score 0: can manage as outpatient.'
+        : badge('orange','Admit')+' Score ≥1 requires admission. Score ≥6 associated with need for transfusion or therapeutic endoscopy.'}
+    </div>`);
+}
+
+function resetGBS() {
+  v('gbs-result').classList.remove('show');
+  ['gbs-bun','gbs-sex','gbs-sbp','gbs-hr'].forEach(id=>v(id).selectedIndex=0);
+  updateHgbOptions();
+  ['gbs-melena','gbs-syncope','gbs-liver','gbs-cardiac'].forEach(id=>v(id).checked=false);
+}
+
+// ══ OAKLAND ═════════════════════════════════════════
+function calcOakland() {
+  const age=ival('oak-age'),sex=ival('oak-sex'),prev=ival('oak-prev'),dre=ival('oak-dre');
+  const hr=ival('oak-hr'),sbp=ival('oak-sbp'),hgb=ival('oak-hgb');
+  const total=age+sex+prev+dre+hr+sbp+hgb;
+  let color,interp,discharge;
+  if (total<=8)      { color='green'; interp='Low risk';         discharge='Safe discharge (95% CI)'; }
+  else if (total<=10){ color='yellow';interp='Low-moderate risk';discharge='Consider discharge (99% CI)'; }
+  else if (total<=14){ color='orange';interp='Moderate risk';    discharge='Admit for observation'; }
+  else               { color='red';   interp='High risk';        discharge='Inpatient / urgent colonoscopy'; }
+  show('oak-result', `
+    <div class="result-score color-${color}">${total} / 35</div>
+    <div class="result-label">${badge(color,interp)}</div>
+    <div class="result-row">
+      <div class="result-stat"><div class="stat-val color-${color}">${discharge.split(' ')[0]}</div><div class="stat-lbl">Disposition</div></div>
+    </div>
+    <div class="result-details" style="margin-top:10px">
+      ${total<=8
+        ? badge('green','Threshold ≤8')+' Safe discharge with 95% probability of no adverse outcome.'
+        : total<=10
+          ? badge('yellow','Threshold ≤10')+' 99% safe outcome in some validations.'
+          : badge('orange','Admit')+' '+discharge}
+      <br>Age ${age} + Sex ${sex} + Prior LGIB ${prev} + DRE ${dre} + HR ${hr} + SBP ${sbp} + Hgb ${hgb} = <strong>${total}</strong>
+    </div>`);
+}
+
+// ══ ROCKALL ═════════════════════════════════════════
+const rockallRebleed=[4.9,3.4,5.3,11.2,14.1,24.1,32.9,43.8,41.8];
+const rockallMort=[0.0,0.0,0.2,2.9,5.3,10.8,17.3,27.0,41.1];
+function calcRockall() {
+  const age=ival('rock-age'),shock=ival('rock-shock'),comorbid=ival('rock-comorbid'),dx=ival('rock-dx'),srh=ival('rock-srh');
+  const total=age+shock+comorbid+dx+srh;
+  const idx=Math.min(total,8);
+  const color=total<=2?'green':total<=4?'yellow':total<=6?'orange':'red';
+  show('rock-result', `
+    <div class="result-score color-${color}">${total} / 11</div>
+    <div class="result-label">${badge(color,total<=2?'Low Risk':total<=4?'Moderate':total<=6?'High':'Very High')}</div>
+    <div class="result-row">
+      <div class="result-stat"><div class="stat-val color-${color}">${rockallRebleed[idx]}%</div><div class="stat-lbl">Rebleed risk</div></div>
+      <div class="result-stat"><div class="stat-val color-${color}">${rockallMort[idx]}%</div><div class="stat-lbl">Mortality</div></div>
+    </div>
+    <div class="result-details" style="margin-top:10px">
+      Age ${age} + Shock ${shock} + Comorbidity ${comorbid} + Diagnosis ${dx} + SRH ${srh} = <strong>${total}</strong>
+      <br>${total<=2
+        ? badge('green','Low risk')+' Score ≤2: early discharge may be appropriate.'
+        : badge('orange','Escalate')+' Score ≥5: consider ICU monitoring and repeat endoscopy.'}
+    </div>`);
+}
+
+// ══ ECKARDT ═════════════════════════════════════════
+function calcEckardt() {
+  const dys=ival('eck-dys'),reg=ival('eck-reg'),pain=ival('eck-pain'),wt=ival('eck-wt');
+  const total=dys+reg+pain+wt;
+  let grade,color,interp;
+  if (total<=1)      { grade='0'; color='green'; interp='Remission'; }
+  else if (total<=3) { grade='I'; color='green'; interp='Remission (≤3)'; }
+  else if (total<=6) { grade='II';color='yellow';interp='Moderate symptoms'; }
+  else               { grade='III';color='red';  interp='Severe symptoms'; }
+  show('eck-result', `
+    <div class="result-score color-${color}">${total} / 12</div>
+    <div class="result-label">${badge(color,'Grade '+grade)} ${interp}</div>
+    <div class="result-row">
+      <div class="result-stat"><div class="stat-val color-${color}">${total<=3?'Yes':'No'}</div><div class="stat-lbl">Remission (≤3)</div></div>
+    </div>
+    <div class="result-details" style="margin-top:10px">
+      Dysphagia ${dys} + Regurgitation ${reg} + Pain ${pain} + Weight loss ${wt} = <strong>${total}</strong>
+      <br>${total<=3
+        ? badge('green','Remission met')+' Eckardt ≤3 defines treatment success in achalasia.'
+        : badge('orange','Above threshold')+' Score >3 suggests inadequate response; consider repeat dilation or myotomy.'}
+    </div>`);
+}
+
+// ══ HARVEY-BRADSHAW ══════════════════════════════════
+function calcHBI() {
+  const wb=ival('hbi-wb'),pain=ival('hbi-pain'),stools=val('hbi-stools'),mass=ival('hbi-mass');
+  if (isNaN(stools)) { alert('Please enter number of liquid stools per day.'); return; }
+  const comps=document.querySelectorAll('.hbi-comp:checked').length;
+  const total=wb+pain+Math.round(stools)+mass+comps;
+  let interp,color;
+  if (total<5)       { interp='Remission';        color='green'; }
+  else if (total<=7) { interp='Mild disease';     color='yellow';}
+  else if (total<=16){ interp='Moderate disease'; color='orange';}
+  else               { interp='Severe disease';   color='red';   }
+  show('hbi-result', `
+    <div class="result-score color-${color}">${total}</div>
+    <div class="result-label">${badge(color,interp)}</div>
+    <div class="result-row">
+      <div class="result-stat"><div class="stat-val color-${color}">${total<5?'Yes (<5)':'No (≥5)'}</div><div class="stat-lbl">Remission</div></div>
+      <div class="result-stat"><div class="stat-val">${comps}</div><div class="stat-lbl">Complications</div></div>
+    </div>
+    <div class="result-details" style="margin-top:10px">
+      Well-being ${wb} + Pain ${pain} + Stools ${Math.round(stools)} + Mass ${mass} + Complications ${comps} = <strong>${total}</strong>
+      <br>Remission &lt;5 · Mild 5–7 · Moderate 8–16 · Severe &gt;16
+    </div>`);
+}
+
+function resetHBI() {
+  v('hbi-result').classList.remove('show');
+  ['hbi-wb','hbi-pain','hbi-mass'].forEach(id=>v(id).selectedIndex=0);
+  v('hbi-stools').value='';
+  document.querySelectorAll('.hbi-comp').forEach(cb=>cb.checked=false);
+}
+
+// ══ MAYO (UC) ════════════════════════════════════════
+function calcMayo() {
+  const sf=ival('mayo-sf'),rb=ival('mayo-rb'),muc=ival('mayo-muc'),pga=ival('mayo-pga');
+  const total=sf+rb+muc+pga;
+  const maxSub=Math.max(sf,rb,muc,pga);
+  let interp,color;
+  if (total<=2&&maxSub<=1){ interp='Remission';       color='green'; }
+  else if (total<=5)      { interp='Mild disease';    color='green'; }
+  else if (total<=10)     { interp='Moderate disease';color='yellow';}
+  else                    { interp='Severe disease';  color='red';   }
+  const remission=total<=2&&maxSub<=1;
+  show('mayo-result', `
+    <div class="result-score color-${color}">${total} / 12</div>
+    <div class="result-label">${badge(color,interp)}</div>
+    <div class="result-row">
+      <div class="result-stat"><div class="stat-val color-${color}">${remission?'Yes':'No'}</div><div class="stat-lbl">Remission</div></div>
+    </div>
+    <div class="result-details" style="margin-top:10px">
+      Stool freq ${sf} · Bleeding ${rb} · Mucosa ${muc} · PGA ${pga} = <strong>${total}</strong>
+      ${!remission&&total<=2?'<br>'+badge('yellow','Note')+' Total ≤2 but subscore >1 — does not meet strict remission criteria.':''}
+      <br>Remission: ≤2 with no subscore >1 · Mild 3–5 · Moderate 6–10 · Severe 11–12
+    </div>`);
+}
+
+// ══ BISAP ════════════════════════════════════════════
+const bisapMort=['<1%','<2%','~2%','~5–9%','~13%','~22%'];
+function calcBISAP() {
+  const bun=chk('bisap-bun'),ms=chk('bisap-ms'),sirs=chk('bisap-sirs'),age=chk('bisap-age'),pe=chk('bisap-pe');
+  const total=bun+ms+sirs+age+pe;
+  const color=total<=1?'green':total===2?'yellow':total===3?'orange':'red';
+  show('bisap-result', `
+    <div class="result-score color-${color}">${total} / 5</div>
+    <div class="result-label">${badge(color,total<=1?'Low Risk':total===2?'Moderate':total<=3?'High':'Very High')}</div>
+    <div class="result-row">
+      <div class="result-stat"><div class="stat-val color-${color}">${bisapMort[total]}</div><div class="stat-lbl">In-hospital mortality</div></div>
+      <div class="result-stat"><div class="stat-val">${total>=3?'~15–25%':total===2?'~5%':'<3%'}</div><div class="stat-lbl">Organ failure risk</div></div>
+    </div>
+    <div class="result-details" style="margin-top:10px">
+      BUN ${bun} · Mental status ${ms} · SIRS ${sirs} · Age ${age} · Pleural effusion ${pe}
+      <br>${total>=3
+        ? badge('red','ICU consideration')+' BISAP ≥3: consider ICU, aggressive fluid resuscitation, monitor for organ failure.'
+        : total===2
+          ? badge('yellow','Intermediate')+' Monitor closely; reassess within 24–48 hours.'
+          : badge('green','Low severity')+' BISAP 0–1: standard ward care appropriate.'}
+    </div>`);
+}
+
+function resetBISAP() {
+  v('bisap-result').classList.remove('show');
+  ['bisap-bun','bisap-ms','bisap-sirs','bisap-age','bisap-pe'].forEach(id=>v(id).checked=false);
+}
+</script>
+</body>
+</html>
